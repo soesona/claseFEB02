@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5268/api/servicios";
+const BASE_URL = "https://clasefeb02.onrender.com/api/servicios";
 
 export async function getServicios() {
   const res = await fetch(BASE_URL);
