@@ -15,7 +15,20 @@ builder.Services.AddCors(options =>
 });
 
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowNetlify",
+        policy =>
+        {
+            policy.WithOrigins("https://mellow-marigold-89311b.netlify.app") // Tu URL de Netlify
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowNetlify");
 
 app.UseCors("AllowReact");
 
