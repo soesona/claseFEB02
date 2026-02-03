@@ -1,58 +1,39 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// 1. CONFIGURACIÓN DE SERVICIOS
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Unificamos CORS en una sola política para evitar conflictos
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReact",
-        policy => policy.WithOrigins("http://localhost:5173")
+    options.AddPolicy("PermitirTodo",
+        policy => policy.WithOrigins("http://localhost:5173", "https://mellow-marigold-89311b.netlify.app")
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });
 
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowNetlify",
-        policy =>
-        {
-            policy.WithOrigins("https://mellow-marigold-89311b.netlify.app") // Tu URL de Netlify
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
-
 var app = builder.Build();
 
-app.UseCors("AllowNetlify");
+// 2. CONFIGURACIÓN DEL PIPELINE (EL ORDEN AQUÍ ES CLAVE)
 
-app.UseCors("AllowReact");
+// Swagger siempre visible para que puedas probar en Render si quieres
+app.UseSwagger();
+app.UseSwaggerUI();
 
+// ACTIVAR CORS (Debe ir antes de los controladores)
+app.UseCors("PermitirTodo");
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseAuthorization();
 
-
-    app.MapControllers(); // IMPORTANTE
-}
-
-//app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// IMPORTANTE: MapControllers debe estar AFUERA del if de Development
+app.MapControllers(); 
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
